@@ -1,1 +1,9 @@
+com\music\controller\AuthController.class
+com\music\common\Result.class
 com\music\MusicPlayerApplication.class
+com\music\mapper\UserMapper.class
+com\music\service\UserService.class
+com\music\config\AuthInterceptor.class
+com\music\common\JwtUtil.class
+com\music\config\WebConfig.class
+com\music\entity\User.class
