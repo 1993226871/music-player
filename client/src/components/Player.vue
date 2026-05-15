@@ -1,44 +1,257 @@
 <template>
   <div class="player-bar">
+    <!-- Left: Current Song Info -->
     <div class="player-left">
-      <img :src="currentSong?.coverUrl || '/default-cover.png'" class="cover" />
-      <div class="song-info">
-        <div class="song-name">{{ currentSong?.name || '未播放' }}</div>
-        <div class="artist">{{ currentSong?.artist || '-' }}</div>
+      <div class="cover-wrapper">
+        <img :src="currentSong?.coverUrl || '/default-cover.png'" class="cover" />
+        <div class="cover-overlay" v-if="currentSong">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+        </div>
+      </div>
+      <div class="song-info" v-if="currentSong">
+        <div class="song-name">{{ currentSong.name }}</div>
+        <div class="artist">{{ currentSong.artist }}</div>
+      </div>
+      <div class="song-info" v-else>
+        <div class="song-name">未播放</div>
+        <div class="artist">-</div>
       </div>
     </div>
+
+    <!-- Center: Controls -->
     <div class="player-center">
       <div class="controls">
-        <button @click="playPrev">上一首</button>
-        <button @click="togglePlay">{{ isPlaying ? '暂停' : '播放' }}</button>
-        <button @click="playNext">下一首</button>
+        <button class="control-btn" @click="playPrev" title="上一首">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+          </svg>
+        </button>
+        <button class="control-btn play-btn" @click="togglePlay">
+          <svg v-if="!isPlaying" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg v-else viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+        <button class="control-btn" @click="playNext" title="下一首">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+          </svg>
+        </button>
       </div>
-      <div class="progress">
-        <span>{{ formatTime(currentTime) }}</span>
-        <input type="range" :value="currentTime" :max="duration" @input="seek" />
-        <span>{{ formatTime(duration) }}</span>
+
+      <!-- Progress Bar -->
+      <div class="progress-section">
+        <span class="time current">{{ formatTime(currentTime) }}</span>
+        <div class="progress-bar" @click="handleProgressClick">
+          <div class="progress-track">
+            <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
+          </div>
+          <input
+            type="range"
+            class="progress-input"
+            :value="currentTime"
+            :max="duration || 100"
+            @input="seek"
+          />
+        </div>
+        <span class="time total">{{ formatTime(duration) }}</span>
       </div>
     </div>
+
+    <!-- Right: Volume & Extra -->
     <div class="player-right">
-      <button @click="showLyric = !showLyric">歌词</button>
+      <button class="control-btn" @click="toggleLyric" :class="{ active: showLyric }" title="歌词">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+          <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+        </svg>
+      </button>
+      <div class="volume-control">
+        <button class="control-btn" @click="toggleMute" title="音量">
+          <svg v-if="volume > 0" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+          </svg>
+          <svg v-else viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+          </svg>
+        </button>
+        <div class="volume-bar">
+          <div class="volume-track">
+            <div class="volume-fill" :style="{ width: volume * 100 + '%' }"></div>
+          </div>
+          <input
+            type="range"
+            class="volume-input"
+            :value="volume"
+            max="1"
+            step="0.01"
+            @input="handleVolumeChange"
+          />
+        </div>
+      </div>
     </div>
+
+    <!-- Hidden Audio Element -->
+    <audio ref="audioEl" @timeupdate="onTimeUpdate" @durationchange="onDurationChange" @loadedmetadata="onLoadedMetadata" @ended="onEnded" @error="onError" @canplay="onCanPlay"></audio>
+
+    <!-- Lyric Display -->
+    <LyricDisplay v-if="showLyric" />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, watch, computed } from 'vue'
 import { usePlayerStore } from '../stores/player'
 import { storeToRefs } from 'pinia'
+import LyricDisplay from './LyricDisplay.vue'
+
+const audioEl = ref<HTMLAudioElement | null>(null)
+const showLyric = ref(false)
 
 const player = usePlayerStore()
-const { currentSong, isPlaying, currentTime, duration, showLyric } = storeToRefs(player)
-const { togglePlay, playNext, playPrev, setCurrentTime } = player
+const { currentSong, isPlaying, currentTime, duration, volume } = storeToRefs(player)
+const { togglePlay: storeTogglePlay, playNext, playPrev, setCurrentTime, setVolume, setIsPlaying } = player
+
+const progressPercent = computed(() => {
+  if (!duration.value) return 0
+  return (currentTime.value / duration.value) * 100
+})
+
+// Watch for song changes to load and play
+watch(currentSong, async (song) => {
+  if (!song || !audioEl.value) return
+
+  // Reset state
+  player.setDuration(0)
+  player.setCurrentTime(0)
+
+  // Get song URL - use stream endpoint for VIP songs
+  try {
+    const token = localStorage.getItem('token')
+    const headers = token ? { 'Authorization': `Bearer ${token}` } : {}
+
+    // Try direct URL first, fall back to stream endpoint
+    const res = await fetch(`/api/songs/${song.id}/url`, { headers })
+    const data = await res.json()
+
+    if (data.data?.url) {
+      // Use direct URL
+      audioEl.value.src = data.data.url
+    } else {
+      // Use stream endpoint for VIP songs
+      audioEl.value.src = `/api/songs/${song.id}/stream`
+    }
+    audioEl.value.load()
+    player.setIsPlaying(true)
+  } catch (e) {
+    console.error('Failed to get song URL:', e)
+    // Fallback: use stream endpoint
+    audioEl.value.src = `/api/songs/${song.id}/stream`
+    audioEl.value.load()
+    player.setIsPlaying(true)
+  }
+})
+
+// Watch for playing state
+watch(isPlaying, (playing) => {
+  if (!audioEl.value || !audioEl.value.src) return
+  if (playing) {
+    audioEl.value.play().catch(console.error)
+  } else {
+    audioEl.value.pause()
+  }
+})
+
+// Watch for volume changes from store
+watch(volume, (vol) => {
+  if (audioEl.value) {
+    audioEl.value.volume = vol
+  }
+})
+
+// Watch for volume changes
+watch(volume, (vol) => {
+  if (audioEl.value) {
+    audioEl.value.volume = vol
+  }
+})
+
+const togglePlay = () => {
+  storeTogglePlay()
+}
+
+const toggleLyric = () => {
+  showLyric.value = !showLyric.value
+}
 
 const seek = (e: Event) => {
   const target = e.target as HTMLInputElement
-  setCurrentTime(Number(target.value))
+  const time = Number(target.value)
+  if (audioEl.value) {
+    audioEl.value.currentTime = time
+  }
+  setCurrentTime(time)
+}
+
+const handleProgressClick = (e: MouseEvent) => {
+  const target = e.currentTarget as HTMLElement
+  const rect = target.querySelector('.progress-track')?.getBoundingClientRect()
+  if (!rect || !audioEl.value) return
+  const percent = (e.clientX - rect.left) / rect.width
+  const newTime = percent * duration.value
+  audioEl.value.currentTime = newTime
+  setCurrentTime(newTime)
+}
+
+const toggleMute = () => {
+  setVolume(volume.value > 0 ? 0 : 0.8)
+}
+
+const handleVolumeChange = (e: Event) => {
+  const target = e.target as HTMLInputElement
+  setVolume(Number(target.value))
+}
+
+const onTimeUpdate = () => {
+  if (audioEl.value) {
+    setCurrentTime(audioEl.value.currentTime)
+  }
+}
+
+const onDurationChange = () => {
+  if (audioEl.value && audioEl.value.duration) {
+    player.setDuration(audioEl.value.duration)
+  }
+}
+
+const onLoadedMetadata = () => {
+  if (audioEl.value && audioEl.value.duration) {
+    player.setDuration(audioEl.value.duration)
+    console.log('Metadata loaded, duration:', audioEl.value.duration)
+  }
+}
+
+const onEnded = () => {
+  playNext()
+}
+
+const onError = (e: Event) => {
+  const audio = e.target as HTMLAudioElement
+  console.error('Audio error:', audio.error)
+}
+
+const onCanPlay = () => {
+  console.log('Can play, starting playback')
+  if (audioEl.value) {
+    audioEl.value.play().catch(console.error)
+  }
 }
 
 const formatTime = (seconds: number) => {
+  if (!seconds || isNaN(seconds)) return '0:00'
   const m = Math.floor(seconds / 60)
   const s = Math.floor(seconds % 60)
   return `${m}:${s.toString().padStart(2, '0')}`
@@ -52,16 +265,213 @@ const formatTime = (seconds: number) => {
   left: 0;
   right: 0;
   height: 80px;
-  background: #333;
-  color: white;
+  background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-dark) 100%);
+  border-top: 1px solid var(--border);
   display: flex;
   align-items: center;
   padding: 0 20px;
+  z-index: 100;
+  backdrop-filter: blur(10px);
 }
-.player-left { display: flex; align-items: center; }
-.cover { width: 50px; height: 50px; }
-.song-info { margin-left: 10px; }
-.player-center { flex: 1; display: flex; flex-direction: column; align-items: center; }
-.controls button { margin: 0 5px; }
-.progress { display: flex; align-items: center; gap: 10px; }
+
+.player-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 240px;
+  flex-shrink: 0;
+}
+
+.cover-wrapper {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cover-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  opacity: 0;
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.cover-wrapper:hover .cover-overlay {
+  opacity: 1;
+}
+
+.song-info {
+  min-width: 0;
+}
+
+.song-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.artist {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.control-btn {
+  color: var(--text-secondary);
+  padding: 8px;
+  border-radius: 50%;
+  transition: var(--transition);
+}
+
+.control-btn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.control-btn.active {
+  color: var(--primary);
+}
+
+.play-btn {
+  color: var(--primary);
+  background: rgba(236, 65, 65, 0.15);
+}
+
+.play-btn:hover {
+  background: rgba(236, 65, 65, 0.25);
+  color: var(--primary);
+}
+
+.progress-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.time {
+  font-size: 11px;
+  color: var(--text-muted);
+  width: 40px;
+  text-align: center;
+}
+
+.progress-bar {
+  flex: 1;
+  position: relative;
+  height: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.progress-track {
+  position: absolute;
+  width: 100%;
+  height: 4px;
+  background: var(--bg-hover);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 2px;
+  transition: width 0.1s linear;
+}
+
+.progress-input {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  margin: 0;
+}
+
+.progress-bar:hover .progress-track {
+  height: 6px;
+}
+
+.player-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 200px;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.volume-bar {
+  position: relative;
+  width: 80px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.volume-track {
+  position: absolute;
+  width: 100%;
+  height: 4px;
+  background: var(--bg-hover);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.volume-fill {
+  height: 100%;
+  background: var(--text-secondary);
+  border-radius: 2px;
+}
+
+.volume-input {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  margin: 0;
+}
 </style>
