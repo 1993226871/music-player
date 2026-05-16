@@ -11,6 +11,9 @@ RUN npm config set registry https://registry.npmmirror.com && npm install --prod
 # Copy application files
 COPY netease-api-new/ .
 
+# Create required token file
+RUN mkdir -p /tmp && echo '' > /tmp/anonymous_token
+
 EXPOSE 3000
 
 CMD ["node", "app.js"]
