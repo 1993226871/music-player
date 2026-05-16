@@ -1,9 +1,14 @@
 # Build stage
 FROM maven:3.9.5-eclipse-temurin-17-alpine AS build
+
+# Configure Aliyun Maven mirror
+RUN mkdir -p /usr/share/maven/ref/settings.d && \
+    echo '<?xml version="1.0" encoding="UTF-8"?><settings><mirrors><mirror><id>aliyun</id><mirrorOf>central</mirrorOf><url>https://maven.aliyun.com/repository/public</url></mirror></mirrors></settings>' > /usr/share/maven/ref/settings.d/aliyun-mirror.xml
+
 WORKDIR /app/server
 COPY server/pom.xml .
 COPY server/src ./src
-RUN mvn dependency:go-offline -B
+RUN mvn dependency:go-offline -B -s /usr/share/maven/ref/settings.d/aliyun-mirror.xml
 RUN mvn package -DskipTests -B -Pspring-prod
 
 # Runtime stage
