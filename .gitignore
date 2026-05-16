@@ -36,7 +36,6 @@ node_modules/
 # netease-api (external dependency)
 netease-api/
 netease-api-old/
-netease-api-new/
 
 # Test images and files
 test-*.png
