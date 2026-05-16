@@ -48,4 +48,20 @@ public class UserService {
     public User getUserById(Long userId) {
         return userMapper.selectById(userId);
     }
+
+    public String getAdminCookie() {
+        User admin = userMapper.selectOne(new QueryWrapper<User>().eq("role", "admin"));
+        if (admin != null && admin.getNeteaseCookie() != null && !admin.getNeteaseCookie().isEmpty()) {
+            return admin.getNeteaseCookie();
+        }
+        return "";
+    }
+
+    public void updateAdminCookie(String cookie) {
+        User admin = userMapper.selectOne(new QueryWrapper<User>().eq("role", "admin"));
+        if (admin != null) {
+            admin.setNeteaseCookie(cookie);
+            userMapper.updateById(admin);
+        }
+    }
 }

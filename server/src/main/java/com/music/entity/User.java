@@ -11,6 +11,8 @@ public class User {
     private Long id;
     private String username;
     private String password;
+    private String role;  // admin / user
+    private String neteaseCookie;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -24,4 +26,8 @@ public class User {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
+    public String getNeteaseCookie() { return neteaseCookie; }
+    public void setNeteaseCookie(String neteaseCookie) { this.neteaseCookie = neteaseCookie; }
 }

@@ -1,0 +1,30 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/music_player?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai}
+    username: ${SPRING_DATASOURCE_USERNAME:root}
+    password: ${SPRING_DATASOURCE_PASSWORD:123456}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.music.entity
+  configuration:
+    map-underscore-to-camel-case: true
+
+jwt:
+  secret: ${JWT_SECRET:music-player-jwt-secret-key-2026-change-in-production}
+  expiration: 604800000
+
+netease:
+  api:
+    base-url: ${NETEASE_API_BASE_URL:http://localhost:3000}
+
+storage:
+  songs:
+    path: ${user.home}/.music-player/songs
+    cleanup:
+      enabled: true
+      max-age-hours: 24

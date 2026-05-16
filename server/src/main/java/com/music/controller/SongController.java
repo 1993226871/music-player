@@ -20,9 +20,13 @@ public class SongController {
     private NeteaseApiService neteaseApiService;
 
     @GetMapping("/{id}/url")
-    public Result<Map<String, String>> getSongUrl(@PathVariable String id) {
-        String url = neteaseApiService.getSongUrl(id);
-        return Result.success(Map.of("url", url));
+    public Result<Map<String, Object>> getSongUrl(@PathVariable String id) {
+        Map<String, Object> result = neteaseApiService.getSongUrlWithPreviewStatus(id, null);
+        Map<String, Object> response = new HashMap<>();
+        response.put("url", result.get("url"));
+        response.put("isPreview", result.get("isPreview"));
+        response.put("cookieExpired", result.get("cookieExpired"));
+        return Result.success(response);
     }
 
     @GetMapping("/{id}/lyric")

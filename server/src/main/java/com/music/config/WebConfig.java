@@ -11,15 +11,14 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new AuthInterceptor())
                 .addPathPatterns("/api/**")
-                .excludePathPatterns("/api/auth/register", "/api/auth/login", "/api/songs/search", "/api/songs/details", "/api/songs/*/url", "/api/songs/*/lyric", "/api/songs/*/download", "/api/songs/*/stream");
+                .excludePathPatterns("/api/auth/register", "/api/auth/login", "/api/songs/search", "/api/songs/details", "/api/songs/*/url", "/api/songs/*/lyric", "/api/songs/*/download", "/api/songs/*/stream", "/api/admin/**");
     }
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173", "http://localhost:3000")
+                .allowedOrigins("*")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                .allowCredentials(true);
+                .allowedHeaders("*");
     }
 }

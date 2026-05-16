@@ -1,0 +1,15 @@
+.git/
+node_modules/
+target/
+dist/
+build/
+*.class
+*.log
+*.tmp
+*.bak
+.DS_Store
+.vscode/
+.idea/
+*.iml
+*.exe
+*.msi

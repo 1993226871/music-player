@@ -1,0 +1,65 @@
+# Test files
+test-*.ts
+test-*.js
+
+# Temporary files
+*.tmp
+*.log
+*.bak
+*.swp
+*~
+
+# System files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Build outputs
+dist/
+target/
+*.exe
+*.msi
+build/
+
+# Config with credentials (use .example files)
+server/src/main/resources/application.yml
+
+# Node modules
+node_modules/
+*/node_modules/
+
+# netease-api (external dependency)
+netease-api/
+netease-api-old/
+netease-api-new/
+
+# Test images and files
+test-*.png
+test-*.jpg
+test-screenshot.png
+qrcode.png
+
+# Credentials and secrets
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+credentials.json
+secrets.json
+.env
+.env.local
+.env.production
+
+# Cookie and auth files
+all-cookies.json
+auth-cookie.txt
+final-cookie.txt
+capture-cookie.js
+capture-log*.json
+capture-output.txt

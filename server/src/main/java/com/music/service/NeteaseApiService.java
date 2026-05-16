@@ -2,6 +2,7 @@ package com.music.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.music.entity.SongCache;
+import com.music.entity.User;
 import com.music.mapper.SongCacheMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -31,25 +32,104 @@ public class NeteaseApiService {
     private final HttpClient httpClient = HttpClient.newHttpClient();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    // 记录Cookie是否已过期
+    private volatile boolean cookieExpired = false;
+
     @Autowired
     private SongCacheMapper songCacheMapper;
 
+    @Autowired
+    private UserService userService;
+
     public String getSongUrl(String songId) {
+        return getSongUrlWithPreviewStatus(songId, null).get("url").toString();
+    }
+
+    public void resetCookieExpired() {
+        this.cookieExpired = false;
+    }
+
+    // 验证cookie是否有效
+    public Map<String, Object> validateCookie(String cookie) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("valid", false);
+        result.put("message", "");
+
+        try {
+            // 用一首VIP歌曲测试，林俊杰的《江南》需要VIP
+            String apiUrl = NETEASE_API_BASE + "/song/url/v1?id=108914&level=sky";
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(apiUrl))
+                    .header("Cookie", cookie)
+                    .GET()
+                    .build();
+
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            JsonNode json = objectMapper.readTree(response.body());
+            JsonNode data = json.get("data");
+
+            if (data != null && data.isArray() && data.size() > 0) {
+                JsonNode songData = data.get(0);
+                Integer time = songData.has("time") ? songData.get("time").asInt() : null;
+                Integer payed = songData.has("payed") ? songData.get("payed").asInt() : null;
+
+                // 有效的VIP cookie特征：payed=1 或者 time>180000 (完整版非预览)
+                if (payed != null && payed == 1) {
+                    result.put("valid", true);
+                    result.put("message", "Cookie有效，可播放VIP完整歌曲");
+                } else if (time != null && time > 180000) {
+                    result.put("valid", true);
+                    result.put("message", "Cookie有效，可播放完整歌曲");
+                } else if (time != null && time == 45035) {
+                    result.put("valid", false);
+                    result.put("message", "Cookie已过期或无效，仅能播放预览版");
+                } else {
+                    result.put("valid", false);
+                    result.put("message", "Cookie无效(请确认是VIP付费账号)");
+                }
+            } else {
+                result.put("valid", false);
+                result.put("message", "无法获取歌曲信息");
+            }
+        } catch (Exception e) {
+            result.put("valid", false);
+            result.put("message", "验证失败: " + e.getMessage());
+        }
+        return result;
+    }
+
+    // 从数据库获取admin用户的cookie
+    private String getAdminCookie() {
+        return userService.getAdminCookie();
+    }
+
+    // 返回URL和是否预览的Map
+    public Map<String, Object> getSongUrlWithPreviewStatus(String songId, String cookie) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("url", "");
+        result.put("isPreview", false);
+        result.put("cookieExpired", false);
+
         // 检查缓存
         SongCache cache = songCacheMapper.selectOne(
             new QueryWrapper<SongCache>().eq("song_id", songId)
         );
         if (cache != null && cache.getExpireAt().isAfter(LocalDateTime.now())) {
-            return cache.getUrl();
+            result.put("url", cache.getUrl());
+            result.put("isPreview", false); // 缓存的URL认为不是预览
+            return result;
         }
+
+        // 获取cookie：优先使用传入的cookie，否则使用admin用户的cookie
+        String actualCookie = cookie != null ? cookie : getAdminCookie();
 
         // 调用Node API获取新URL
         try {
-            String url = "https://music.163.com/song/media/outer/url?id=" + songId;
-            String apiUrl = NETEASE_API_BASE + "/song/url?id=" + songId;
+            String apiUrl = NETEASE_API_BASE + "/song/url/v1?id=" + songId + "&level=sky";
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(apiUrl))
+                    .header("Cookie", actualCookie)
                     .GET()
                     .build();
 
@@ -58,17 +138,41 @@ public class NeteaseApiService {
 
             JsonNode json = objectMapper.readTree(response.body());
             JsonNode data = json.get("data");
-            String finalUrl = data != null && !data.isEmpty() ? data.get(0).get("url").asText() : url;
+            String finalUrl = null;
+            boolean isPreview = false;
 
-            // 修复URL中的特殊字符编码问题
-            if (finalUrl != null && finalUrl.contains("vuutv=")) {
-                int vuutvIndex = finalUrl.indexOf("vuutv=");
-                String beforeVuutv = finalUrl.substring(0, vuutvIndex + 6);
-                String vuutvValue = finalUrl.substring(vuutvIndex + 6);
-                // 确保 + 被正确编码为 %2B
-                vuutvValue = vuutvValue.replace("+", "%2B");
-                finalUrl = beforeVuutv + vuutvValue;
+            if (data != null && data.isArray() && data.size() > 0) {
+                JsonNode songData = data.get(0);
+                finalUrl = songData.get("url").asText();
+                Integer time = songData.has("time") ? songData.get("time").asInt() : null;
+
+                if (time != null && time < 60000) {
+                    isPreview = true;
+                    // 如果Cookie过期，time会是45035（45秒预览）
+                    // 正常VIP歌曲的time应该是歌曲时长（如197500ms）
+                    if (time == 45035 && !cookieExpired) {
+                        // 首次检测到Cookie可能过期，标记
+                        cookieExpired = true;
+                        result.put("cookieExpired", true);
+                    }
+                }
             }
+
+            if (finalUrl == null) {
+                finalUrl = "https://music.163.com/song/media/outer/url?id=" + songId;
+            } else {
+                // 修复URL中的特殊字符编码问题
+                if (finalUrl.contains("vuutv=")) {
+                    int vuutvIndex = finalUrl.indexOf("vuutv=");
+                    String beforeVuutv = finalUrl.substring(0, vuutvIndex + 6);
+                    String vuutvValue = finalUrl.substring(vuutvIndex + 6);
+                    vuutvValue = vuutvValue.replace("+", "%2B");
+                    finalUrl = beforeVuutv + vuutvValue;
+                }
+            }
+
+            result.put("url", finalUrl);
+            result.put("isPreview", isPreview);
 
             // 更新缓存
             if (cache != null) {
@@ -82,9 +186,11 @@ public class NeteaseApiService {
                 newCache.setExpireAt(LocalDateTime.now().plusHours(4));
                 songCacheMapper.insert(newCache);
             }
-            return finalUrl;
+
+            return result;
         } catch (Exception e) {
-            return "https://music.163.com/song/media/outer/url?id=" + songId;
+            result.put("url", "https://music.163.com/song/media/outer/url?id=" + songId);
+            return result;
         }
     }
 
