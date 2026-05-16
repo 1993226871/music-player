@@ -29,8 +29,7 @@ services:
       dockerfile: Dockerfile.netease
     container_name: music-netease-api
     restart: unless-stopped
-    ports:
-      - "3000:3000"
+    network_mode: host
     deploy:
       resources:
         limits:
