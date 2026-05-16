@@ -48,7 +48,7 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-123456}
       JWT_SECRET: ${JWT_SECRET:-music-player-jwt-secret-key-2026-change-in-production}
-      NETEASE_API_BASE_URL: http://netease-api:3000
+      NETEASE_API_BASE_URL: http://localhost:3000
     depends_on:
       mysql:
         condition: service_healthy
