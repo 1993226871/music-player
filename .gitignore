@@ -36,6 +36,8 @@ node_modules/
 # netease-api (external dependency)
 netease-api/
 netease-api-old/
+# netease-api-new is deployed via Docker, keep in repo
+netease-api-new/node_modules/
 
 # Test images and files
 test-*.png
