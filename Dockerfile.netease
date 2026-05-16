@@ -6,7 +6,7 @@ WORKDIR /app
 COPY netease-api-new/package*.json ./
 
 # Install dependencies
-RUN npm install --production
+RUN npm config set registry https://registry.npmmirror.com && npm install --production
 
 # Copy application files
 COPY netease-api-new/ .
