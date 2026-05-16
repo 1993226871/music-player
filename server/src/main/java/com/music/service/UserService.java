@@ -29,6 +29,7 @@ public class UserService {
         result.put("token", JwtUtil.generateToken(user.getId(), username));
         result.put("userId", user.getId());
         result.put("username", username);
+        result.put("role", user.getRole());
         return result;
     }
 
@@ -42,6 +43,7 @@ public class UserService {
         result.put("token", JwtUtil.generateToken(user.getId(), username));
         result.put("userId", user.getId());
         result.put("username", username);
+        result.put("role", user.getRole());
         return result;
     }
 
