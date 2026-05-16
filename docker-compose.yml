@@ -34,9 +34,7 @@ services:
           memory: 256M
 
   server:
-    build:
-      context: .
-      dockerfile: Dockerfile.server
+    image: eclipse-temurin:17-jre-alpine
     container_name: music-server
     restart: unless-stopped
     ports:
@@ -47,6 +45,10 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-123456}
       JWT_SECRET: ${JWT_SECRET:-music-player-jwt-secret-key-2026-change-in-production}
       NETEASE_API_BASE_URL: http://localhost:3000
+    volumes:
+      - ./server/target/music-player-1.0.0.jar:/app/app.jar
+    working_dir: /app
+    command: java -Dspring.profiles.active=prod -jar app.jar
     depends_on:
       mysql:
         condition: service_healthy
