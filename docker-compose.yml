@@ -5,11 +5,10 @@ services:
     image: mysql:8.0
     container_name: music-mysql
     restart: unless-stopped
+    network_mode: host
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-123456}
       MYSQL_DATABASE: music_player
-    ports:
-      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./server/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
@@ -41,10 +40,9 @@ services:
       dockerfile: Dockerfile.server
     container_name: music-server
     restart: unless-stopped
-    ports:
-      - "8080:8080"
+    network_mode: host
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/music_player?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/music_player?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-123456}
       JWT_SECRET: ${JWT_SECRET:-music-player-jwt-secret-key-2026-change-in-production}
