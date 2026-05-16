@@ -1,9 +1,9 @@
 # Build stage
 FROM maven:3.9.5-eclipse-temurin-17-alpine AS build
 
-# Configure Aliyun Maven mirror
+# Configure Aliyun Maven mirror and Spring repository
 RUN mkdir -p /usr/share/maven/ref/settings.d && \
-    echo '<?xml version="1.0" encoding="UTF-8"?><settings><mirrors><mirror><id>aliyun</id><mirrorOf>central</mirrorOf><url>https://maven.aliyun.com/repository/public</url></mirror></mirrors></settings>' > /usr/share/maven/ref/settings.d/aliyun-mirror.xml
+    echo '<?xml version="1.0" encoding="UTF-8"?><settings><mirrors><mirror><id>aliyun</id><mirrorOf>central</mirrorOf><url>https://maven.aliyun.com/repository/public</url></mirror></mirrors><profiles><profile><id> spring</id><repositories><repository><id>spring</id><url>https://repo.spring.io/milestone</url><releases><enabled>true</enabled></releases><snapshots><enabled>false</enabled></snapshots></repository></repositories></profile></profiles><activeProfiles><activeProfile>spring</activeProfile></activeProfiles></settings>' > /usr/share/maven/ref/settings.d/aliyun-mirror.xml
 
 WORKDIR /app/server
 COPY server/pom.xml .
