@@ -213,10 +213,8 @@ public class NeteaseApiService {
 
     public String search(String keyword) {
         try {
-            // Spring @RequestParam already decodes the URL parameter, so keyword is already in UTF-8
-            // Only encode if it contains special characters that need escaping
-            String encodedKeyword = java.net.URLEncoder.encode(keyword, "UTF-8");
-            String apiUrl = NETEASE_API_BASE + "/search?keywords=" + encodedKeyword;
+            // Do NOT encode - Spring @RequestParam already decodes URL parameters
+            String apiUrl = NETEASE_API_BASE + "/search?keywords=" + keyword;
             System.out.println("Searching netease API with URL: " + apiUrl);
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(apiUrl))
