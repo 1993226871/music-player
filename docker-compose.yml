@@ -18,8 +18,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - music-net
+    deploy:
+      resources:
+        limits:
+          memory: 400M
 
   netease-api:
     build:
@@ -34,30 +36,26 @@ services:
           memory: 256M
 
   server:
-    image: eclipse-temurin:17-jre-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.server
     container_name: music-server
     restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://music-mysql:3306/music_player?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/music_player?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-123456}
       JWT_SECRET: ${JWT_SECRET:-music-player-jwt-secret-key-2026-change-in-production}
       NETEASE_API_BASE_URL: http://localhost:3000
-    volumes:
-      - ./server/target/music-player-1.0.0.jar:/app/app.jar
-    working_dir: /app
-    command: java -Dspring.profiles.active=prod -jar app.jar
     depends_on:
       mysql:
         condition: service_healthy
-    networks:
-      - music-net
-
-networks:
-  music-net:
-    driver: bridge
+    deploy:
+      resources:
+        limits:
+          memory: 512M
 
 volumes:
   mysql_data:

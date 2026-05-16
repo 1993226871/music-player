@@ -9,7 +9,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import axios from 'axios'
+import api from '../utils/api'
 import SongList from '../components/SongList.vue'
 import { usePlayerStore } from '../stores/player'
 
@@ -21,10 +21,10 @@ const showAddSong = ref(false)
 
 onMounted(async () => {
   const id = route.params.id
-  const plRes = await axios.get(`http://localhost:8080/api/playlists/${id}`)
+  const plRes = await api.get(`/api/playlists/${id}`)
   playlistName.value = plRes.data.data.name
 
-  const songsRes = await axios.get(`http://localhost:8080/api/playlists/${id}/songs`)
+  const songsRes = await api.get(`/api/playlists/${id}/songs`)
   songs.value = songsRes.data.data.map((s: any) => ({
     id: s.songId,
     name: '歌曲',

@@ -98,7 +98,7 @@ const search = async () => {
 
   loading.value = true
   try {
-    const res = await api.post('/api/songs/search', { keyword: keyword.value })
+    const res = await api.get(`/api/songs/search?keyword=${encodeURIComponent(keyword.value)}`)
     const data = JSON.parse(res.data.data)
     const songList = data.result.songs?.slice(0, 30) || []
 

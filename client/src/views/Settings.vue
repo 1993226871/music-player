@@ -64,6 +64,8 @@ h1 {
   background: var(--bg-card);
   border-radius: var(--radius-lg);
   padding: 20px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
 }
 
 h3 {
@@ -109,14 +111,15 @@ h3 {
 
 button {
   padding: 12px 24px;
-  background: var(--primary);
-  color: #fff;
-  border: none;
+  background: #dc3030;
+  color: #ffffff;
+  border: 1px solid #dc3030;
   border-radius: var(--radius);
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   transition: var(--transition);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 button:hover:not(:disabled) {

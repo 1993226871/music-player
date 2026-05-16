@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import axios from 'axios'
+import api from '../utils/api'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 
@@ -22,7 +22,7 @@ const router = useRouter()
 const auth = useAuthStore()
 
 const handleRegister = async () => {
-  const res = await axios.post('http://localhost:8080/api/auth/register', { username: username.value, password: password.value })
+  const res = await api.post('/api/auth/register', { username: username.value, password: password.value })
   auth.setAuth(res.data.data.token, res.data.data.userId, res.data.data.username)
   router.push('/')
 }
@@ -31,5 +31,6 @@ const handleRegister = async () => {
 <style scoped>
 .register-page { display: flex; flex-direction: column; align-items: center; padding: 50px; }
 input { margin: 10px 0; padding: 10px; width: 300px; }
-button { padding: 10px 30px; background: #ec4141; color: white; border: none; cursor: pointer; }
+button { padding: 12px 30px; background: #ec4141; color: #fff; border: 2px solid #ec4141; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+button:hover { background: #c93030; border-color: #c93030; }
 </style>

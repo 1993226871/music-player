@@ -7,7 +7,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import api from '../utils/api'
 import SongList from '../components/SongList.vue'
 import { usePlayerStore } from '../stores/player'
 
@@ -15,7 +15,7 @@ const songs = ref<any[]>([])
 const player = usePlayerStore()
 
 onMounted(async () => {
-  const res = await axios.get('http://localhost:8080/api/favorites')
+  const res = await api.get('/api/favorites')
   const favorites = res.data.data
   songs.value = favorites.map((f: any) => ({
     id: f.songId,

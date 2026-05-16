@@ -35,9 +35,8 @@ public class SongController {
         return Result.success(lyric);
     }
 
-    @PostMapping("/search")
-    public Result<String> search(@RequestBody Map<String, String> body) {
-        String keyword = body.get("keyword");
+    @GetMapping("/search")
+    public Result<String> search(@RequestParam String keyword) {
         String results = neteaseApiService.search(keyword);
         return Result.success(results);
     }

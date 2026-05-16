@@ -19,6 +19,7 @@ export const usePlayerStore = defineStore('player', () => {
   const currentIndex = ref(-1)
   const lyricLines = ref<{ time: number; text: string }[]>([])
   const showLyric = ref(false)
+  const isPreview = ref(false)
 
   const play = (song: Song) => {
     currentSong.value = song
@@ -45,6 +46,14 @@ export const usePlayerStore = defineStore('player', () => {
     volume.value = vol
   }
 
+  const setIsPlaying = (playing: boolean) => {
+    isPlaying.value = playing
+  }
+
+  const setIsPreview = (preview: boolean) => {
+    isPreview.value = preview
+  }
+
   const playNext = () => {
     if (currentIndex.value < playlist.value.length - 1) {
       currentIndex.value++
@@ -60,8 +69,8 @@ export const usePlayerStore = defineStore('player', () => {
   }
 
   return {
-    currentSong, isPlaying, currentTime, duration, volume,
+    currentSong, isPlaying, currentTime, duration, volume, isPreview,
     playlist, currentIndex, lyricLines, showLyric,
-    play, pause, togglePlay, setCurrentTime, setDuration, setVolume, playNext, playPrev
+    play, pause, togglePlay, setCurrentTime, setDuration, setVolume, setIsPlaying, setIsPreview, playNext, playPrev
   }
 })
