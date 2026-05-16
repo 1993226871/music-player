@@ -213,7 +213,11 @@ public class NeteaseApiService {
 
     public String search(String keyword) {
         try {
-            String apiUrl = NETEASE_API_BASE + "/search?keywords=" + java.net.URLEncoder.encode(keyword, "UTF-8");
+            // Spring @RequestParam already decodes the URL parameter, so keyword is already in UTF-8
+            // Only encode if it contains special characters that need escaping
+            String encodedKeyword = java.net.URLEncoder.encode(keyword, "UTF-8");
+            String apiUrl = NETEASE_API_BASE + "/search?keywords=" + encodedKeyword;
+            System.out.println("Searching netease API with URL: " + apiUrl);
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(apiUrl))
                     .GET()
@@ -222,8 +226,11 @@ public class NeteaseApiService {
             HttpResponse<String> response = httpClient.send(request,
                 HttpResponse.BodyHandlers.ofString());
 
+            System.out.println("Netease API response: " + response.body());
             return response.body();
         } catch (Exception e) {
+            System.err.println("Search error: " + e.getMessage());
+            e.printStackTrace();
             return "{\"result\":[]}";
         }
     }
