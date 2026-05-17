@@ -1,7 +1,7 @@
 <template>
   <div class="song-list">
     <div v-for="song in songs" :key="song.id" class="song-item" @click="handleClick(song)">
-      <img :src="song.coverUrl" class="song-cover" />
+      <img :src="song.coverUrl" class="song-cover" @error="handleImageError" />
       <div class="song-detail">
         <div class="song-name">{{ song.name }}</div>
         <div class="artist">{{ song.artist }}</div>
@@ -22,6 +22,11 @@ defineProps<{ songs: Song[] }>()
 const emit = defineEmits<{ (e: 'play', song: Song): void }>()
 
 const handleClick = (song: Song) => emit('play', song)
+
+const handleImageError = (e: Event) => {
+  const img = e.target as HTMLImageElement
+  img.src = '/default-cover.png'
+}
 </script>
 
 <style scoped>

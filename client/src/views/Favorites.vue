@@ -15,14 +15,30 @@ const songs = ref<any[]>([])
 const player = usePlayerStore()
 
 onMounted(async () => {
-  const res = await api.get('/api/favorites')
-  const favorites = res.data.data
-  songs.value = favorites.map((f: any) => ({
-    id: f.songId,
-    name: '歌曲',
-    artist: '未知',
-    coverUrl: '/default-cover.png'
-  }))
+  try {
+    const res = await api.get('/api/favorites')
+    const favorites = res.data.data || []
+
+    if (favorites.length === 0) {
+      songs.value = []
+      return
+    }
+
+    // 获取歌曲 IDs 并获取详情
+    const songIds = favorites.map((f: any) => f.songId).join(',')
+    const detailsRes = await api.get(`/api/songs/details?ids=${songIds}`)
+
+    const coverMap = detailsRes.data.data || {}
+    songs.value = favorites.map((f: any) => ({
+      id: f.songId,
+      name: f.songName || '未知歌曲',
+      artist: f.artist || '未知艺术家',
+      coverUrl: coverMap[f.songId] || '/default-cover.png'
+    }))
+  } catch (e) {
+    console.error('Failed to load favorites:', e)
+    songs.value = []
+  }
 })
 
 const playSong = (song: any) => player.play(song)

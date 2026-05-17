@@ -1,6 +1,6 @@
 <template>
   <div class="playlist-card" @click="handleClick">
-    <img :src="coverUrl || '/default-cover.png'" class="cover" />
+    <img :src="coverUrl || '/default-cover.png'" class="cover" @error="handleImageError" />
     <div class="name">{{ name }}</div>
   </div>
 </template>
@@ -14,6 +14,10 @@ const props = defineProps<{
 
 const emit = defineEmits<{ (e: 'click', id: number): void }>()
 const handleClick = () => emit('click', props.id)
+const handleImageError = (e: Event) => {
+  const img = e.target as HTMLImageElement
+  img.src = '/default-cover.png'
+}
 </script>
 
 <style scoped>
