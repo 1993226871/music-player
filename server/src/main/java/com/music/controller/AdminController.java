@@ -41,8 +41,15 @@ public class AdminController {
             userService.updateAdminCookie(content.trim());
             neteaseApiService.resetCookieExpired();
 
+            // 重启 netease-api 容器以应用新 cookie
+            try {
+                Runtime.getRuntime().exec(new String[]{"sh", "-c", "docker restart music-netease-api"});
+            } catch (Exception e) {
+                System.err.println("Failed to restart netease-api: " + e.getMessage());
+            }
+
             Map<String, Object> result = new HashMap<>();
-            result.put("message", "Cookie更新成功！" + validation.get("message"));
+            result.put("message", "Cookie更新成功！" + validation.get("message") + " (正在重启 netease-api)");
             result.put("length", content.length());
             return Result.success(result);
         } catch (Exception e) {
