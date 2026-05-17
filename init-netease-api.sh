@@ -6,7 +6,7 @@ echo "Waiting for backend..."
 max_attempts=30
 attempt=0
 while [ $attempt -lt $max_attempts ]; do
-  if curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/auth/me 2>/dev/null | grep -q "401\|200"; then
+  if wget --spider --timeout=2 -q "http://localhost:8080/api/auth/me" 2>/dev/null || wget --spider --timeout=2 -q "http://localhost:8080/api/admin/cookie" 2>/dev/null; then
     echo "Backend is ready"
     break
   fi
@@ -15,9 +15,9 @@ while [ $attempt -lt $max_attempts ]; do
   sleep 2
 done
 
-# Fetch cookie from backend
+# Fetch cookie from backend using wget
 echo "Fetching cookie from backend..."
-COOKIE_RESPONSE=$(curl -s "http://localhost:8080/api/admin/cookie")
+COOKIE_RESPONSE=$(wget -O- -q "http://localhost:8080/api/admin/cookie")
 COOKIE=$(echo "$COOKIE_RESPONSE" | grep -o '"MUSIC_U":"[^"]*"' | cut -d'"' -f4)
 
 if [ -n "$COOKIE" ] && [ "$COOKIE" != "null" ] && [ ${#COOKIE} -gt 100 ]; then
