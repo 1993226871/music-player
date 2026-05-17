@@ -29,6 +29,9 @@ services:
     container_name: music-netease-api
     restart: unless-stopped
     network_mode: host
+    volumes:
+      - ./init-netease-api.sh:/init.sh:ro
+    command: sh /init.sh && node app.js
     deploy:
       resources:
         limits:

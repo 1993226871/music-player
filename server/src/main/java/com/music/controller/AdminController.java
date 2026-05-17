@@ -69,4 +69,12 @@ public class AdminController {
         result.put("cookieLength", cookie != null ? cookie.length() : 0);
         return Result.success(result);
     }
+
+    @GetMapping("/cookie")
+    public Result<Map<String, String>> getCookie() {
+        String cookie = userService.getAdminCookie();
+        Map<String, String> result = new HashMap<>();
+        result.put("MUSIC_U", cookie);
+        return Result.success(result);
+    }
 }
